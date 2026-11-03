@@ -1,1 +1,73 @@
-1
+@*
+//Họ và tên : Phí Bảo Nam - 23103100236
+//Module 3: Quản lý nhân viên – Đăng ký – Duyệt đào tạo.
+*@
+@model NhanVienViewModel
+
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+<div class="form-grid">
+    <div class="field">
+        <label asp-for="MaTaiKhoan"></label>
+        @if (Model.MaNhanVien > 0 && !string.IsNullOrEmpty(Model.TenDangNhap))
+        {
+            <select asp-for="MaTaiKhoan" asp-items="Model.TaiKhoans"></select>
+            <small class="muted">Tài khoản đang liên kết: <strong>@Model.TenDangNhap</strong></small>
+        }
+        else
+        {
+            <select asp-for="MaTaiKhoan" asp-items="Model.TaiKhoans">
+                <option value="">-- Chọn tài khoản để liên kết hồ sơ --</option>
+            </select>
+            <small class="muted">Chỉ hiển thị các tài khoản chưa được liên kết với nhân viên nào.</small>
+        }
+        <span asp-validation-for="MaTaiKhoan" class="field-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="HoTen"></label>
+        <input asp-for="HoTen" placeholder="Ví dụ: Nguyễn Văn A" />
+        <span asp-validation-for="HoTen" class="field-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="MaPhongBan"></label>
+        <select asp-for="MaPhongBan" asp-items="Model.PhongBans">
+            <option value="">-- Chọn phòng ban --</option>
+        </select>
+        <span asp-validation-for="MaPhongBan" class="field-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" type="email" placeholder="Ví dụ: nva@uneti.edu.vn" />
+        <span asp-validation-for="Email" class="field-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="SoDienThoai"></label>
+        <input asp-for="SoDienThoai" placeholder="Ví dụ: 0987654321" />
+        <span asp-validation-for="SoDienThoai" class="field-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="NgaySinh"></label>
+        <input asp-for="NgaySinh" type="date" asp-format="{0:yyyy-MM-dd}" />
+        <span asp-validation-for="NgaySinh" class="field-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="NgayVaoLam"></label>
+        <input asp-for="NgayVaoLam" type="date" asp-format="{0:yyyy-MM-dd}" />
+        <small class="muted">Không sau ngày hôm nay và không trước ngày sinh.</small>
+        <span asp-validation-for="NgayVaoLam" class="field-error"></span>
+    </div>
+
+    <div class="field field-check" style="align-self: center;">
+        <label asp-for="TrangThai">
+            <input asp-for="TrangThai" type="checkbox" />
+            <span>Đang làm việc (đang hoạt động)</span>
+        </label>
+        <span asp-validation-for="TrangThai" class="field-error"></span>
+    </div>
+</div>

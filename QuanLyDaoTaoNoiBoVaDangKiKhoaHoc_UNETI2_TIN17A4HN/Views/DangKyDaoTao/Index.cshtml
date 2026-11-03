@@ -1,1 +1,188 @@
-1
+@*
+//Họ và tên : Phí Bảo Nam - 23103100236
+//Module 3: Quản lý nhân viên – Đăng ký – Duyệt đào tạo.
+*@
+@model DangKyDaoTaoListViewModel
+@{
+    ViewData["Title"] = "Đăng ký khóa học";
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow navy">ĐÀO TẠO NỘI BỘ</p>
+        <h1>Đăng ký khóa đào tạo</h1>
+        <p class="muted">Khám phá các lớp đào tạo đang mở, tra cứu lịch học và đăng ký tham gia nâng cao kỹ năng.</p>
+    </div>
+    <a class="secondary-button" asp-action="LichSuDangKy">📋 Xem lịch sử đào tạo của tôi</a>
+</div>
+
+<partial name="_ThongBao" />
+
+@if (Model.ChuaCoHoSoNhanVien)
+{
+    <div class="alert alert-error" role="alert">
+        <strong>Chú ý:</strong> Tài khoản của bạn hiện chưa được liên kết với hồ sơ nhân viên trong hệ thống.
+        Vui lòng liên hệ bộ phận <strong>Nhân sự - Đào tạo</strong> để tạo hồ sơ nhân viên trước khi thực hiện đăng ký các khóa học.
+    </div>
+}
+@if (Model.NhanVienNgungHoatDong)
+{
+    <div class="alert alert-error" role="alert">
+        <strong>Thông báo:</strong> Hồ sơ nhân viên của bạn hiện ở trạng thái <strong>Đã nghỉ việc / Ngừng hoạt động</strong>.
+        Theo quy định, nhân viên đã nghỉ việc hoặc ngừng hoạt động không được phép tạo đăng ký khóa học mới.
+    </div>
+}
+
+<form asp-action="Index" method="get" class="filter-panel">
+    <h2 class="filter-title">Tìm kiếm và lọc lớp đào tạo</h2>
+    <div class="search-row">
+        <div class="field search-field">
+            <label asp-for="SearchTerm">Từ khóa</label>
+            <input asp-for="SearchTerm" placeholder="Tìm tên lớp, tên khóa, lĩnh vực, địa điểm..." />
+        </div>
+        <div class="actions">
+            <button type="submit" class="primary-button">Tìm kiếm</button>
+        </div>
+    </div>
+
+    <div class="filter-grid">
+        <div class="field">
+            <label asp-for="MaLinhVuc">Lĩnh vực đào tạo</label>
+            <select asp-for="MaLinhVuc" asp-items="Model.LinhVucs">
+                <option value="">Tất cả lĩnh vực</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label asp-for="TinhTrangDangKy">Tình trạng đăng ký</label>
+            <select asp-for="TinhTrangDangKy">
+                <option value="">Tất cả các lớp</option>
+                <option value="chuadk">Lớp tôi chưa đăng ký</option>
+                <option value="dadk">Lớp tôi đã đăng ký</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button type="submit" class="primary-button">Lọc danh sách</button>
+        <a class="secondary-button" asp-action="Index">Đặt lại bộ lọc</a>
+    </div>
+</form>
+
+<p class="muted">@Model.TotalCount lớp đào tạo · @(Model.TotalPages == 0 ? "Chưa có trang" : $"Trang {Model.PageIndex}/{Model.TotalPages}") · @Model.PageSize lớp/trang</p>
+
+<div class="table-panel m2-table">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Lớp / Khóa đào tạo</th>
+                <th>Lĩnh vực</th>
+                <th>Thời gian học</th>
+                <th>Hạn đăng ký</th>
+                <th>Địa điểm</th>
+                <th>Chỗ còn / Tối đa</th>
+                <th>Trạng thái cá nhân</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Lops)
+            {
+                <tr>
+                    <td>
+                        <strong>@item.TenLop</strong>
+                        <small>@item.TenKhoaDaoTao</small>
+                    </td>
+                    <td>@item.TenLinhVuc</td>
+                    <td>
+                        @item.NgayBatDau.ToString("dd/MM/yyyy")
+                        <small>đến @item.NgayKetThuc.ToString("dd/MM/yyyy")</small>
+                    </td>
+                    <td>
+                        @item.HanDangKy.ToString("dd/MM/yyyy HH:mm")
+                    </td>
+                    <td>
+                        @item.DiaDiem
+                        <small class="muted">GV: @item.TenGiangVien</small>
+                    </td>
+                    <td>
+                        <strong class="@(item.SoChoCon > 0 ? "seats-available" : "seats-full")">
+                            @item.SoChoCon / @item.SoLuongToiDa
+                        </strong>
+                        <small>@item.SoDaDuyet đã duyệt</small>
+                    </td>
+                    <td>
+                        @if (item.DaTungDangKy)
+                        {
+                            <span class="status-badge @item.TrangThaiDangKyCss">
+                                @item.TenTrangThaiDangKy
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-muted">Chưa đăng ký</span>
+                        }
+                    </td>
+                    <td class="row-actions">
+                        @if (Model.ChuaCoHoSoNhanVien)
+                        {
+                            <span class="muted" title="Cần hồ sơ nhân viên để đăng ký">Chưa có hồ sơ</span>
+                        }
+                        else if (Model.NhanVienNgungHoatDong)
+                        {
+                            <span class="muted" title="Nhân viên đã nghỉ việc/ngừng hoạt động không được tạo đăng ký mới">Đã nghỉ việc</span>
+                        }
+                        else if (item.CoTheDangKy)
+                        {
+                            <form asp-action="DangKy" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn đăng ký lớp học này?');">
+                                <input type="hidden" name="maLop" value="@item.MaLop" />
+                                <button type="submit" class="primary-button" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">
+                                    Đăng ký
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="muted" title="@item.LyDoKhongTheDangKy">
+                                🚫 @item.LyDoKhongTheDangKy
+                            </span>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (Model.Lops.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="table-empty">Không tìm thấy lớp đào tạo nào phù hợp.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="pagination" aria-label="Phân trang danh sách lớp">
+        @if (Model.HasPreviousPage)
+        {
+            <a asp-action="Index" asp-all-route-data="Model.RouteForPage(1)">Đầu</a>
+            <a asp-action="Index" asp-all-route-data="Model.RouteForPage(Model.PageIndex - 1)">← Trước</a>
+        }
+        @for (var pageNum = Math.Max(1, Model.PageIndex - 2); pageNum <= Math.Min(Model.TotalPages, Model.PageIndex + 2); pageNum++)
+        {
+            if (pageNum == Model.PageIndex)
+            {
+                <span class="current" aria-current="page">@pageNum</span>
+            }
+            else
+            {
+                <a asp-action="Index" asp-all-route-data="Model.RouteForPage(pageNum)">@pageNum</a>
+            }
+        }
+        @if (Model.HasNextPage)
+        {
+            <a asp-action="Index" asp-all-route-data="Model.RouteForPage(Model.PageIndex + 1)">Sau →</a>
+            <a asp-action="Index" asp-all-route-data="Model.RouteForPage(Model.TotalPages)">Cuối</a>
+        }
+    </nav>
+}

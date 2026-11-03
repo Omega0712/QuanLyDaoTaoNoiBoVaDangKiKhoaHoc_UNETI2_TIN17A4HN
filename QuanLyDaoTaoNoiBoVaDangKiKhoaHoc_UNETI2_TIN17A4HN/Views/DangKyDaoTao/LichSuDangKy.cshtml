@@ -1,1 +1,127 @@
-1
+@*
+//Họ và tên : Phí Bảo Nam - 23103100236
+//Module 3: Quản lý nhân viên – Đăng ký – Duyệt đào tạo.
+*@
+@model LichSuDangKyListViewModel
+@{
+    ViewData["Title"] = "Lịch sử đăng ký đào tạo";
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow navy">HỒ SƠ CÁ NHÂN</p>
+        <h1>Lịch sử đăng ký & đào tạo của tôi</h1>
+        <p class="muted">Theo dõi tiến trình đăng ký, kết quả xét duyệt và thông tin các lớp đào tạo đã tham gia.</p>
+    </div>
+    <a class="primary-button" asp-action="Index">+ Đăng ký thêm lớp mới</a>
+</div>
+
+<partial name="_ThongBao" />
+
+@if (Model.ChuaCoHoSoNhanVien)
+{
+    <div class="alert alert-error" role="alert">
+        <strong>Chú ý:</strong> Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên trong hệ thống.
+        Vui lòng liên hệ bộ phận <strong>Nhân sự - Đào tạo</strong> để được hỗ trợ.
+    </div>
+}
+
+<form asp-action="LichSuDangKy" method="get" class="filter-panel">
+    <div class="filter-grid">
+        <div class="field">
+            <label asp-for="SearchTerm">Tìm kiếm</label>
+            <input asp-for="SearchTerm" placeholder="Tên lớp, tên khóa đào tạo..." />
+        </div>
+
+        <div class="field">
+            <label asp-for="TrangThai">Trạng thái đăng ký</label>
+            <select asp-for="TrangThai">
+                <option value="">Tất cả trạng thái</option>
+                <option value="ChoDuyet">Chờ duyệt</option>
+                <option value="DaDuyet">Đã duyệt</option>
+                <option value="TuChoi">Từ chối</option>
+                <option value="DaHuy">Đã hủy</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button type="submit" class="primary-button">Lọc lịch sử</button>
+        <a class="secondary-button" asp-action="LichSuDangKy">Đặt lại</a>
+    </div>
+</form>
+
+<div class="table-panel m2-table">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Lớp / Khóa đào tạo</th>
+                <th>Thời gian học</th>
+                <th>Địa điểm</th>
+                <th>Ngày đăng ký</th>
+                <th>Trạng thái</th>
+                <th>Ngày duyệt</th>
+                <th>Ghi chú / Lý do</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.DanhSach)
+            {
+                <tr>
+                    <td>
+                        <strong>@item.TenLop</strong>
+                        <small>Khóa: @item.TenKhoaDaoTao (@item.TenLinhVuc)</small>
+                    </td>
+                    <td>
+                        @item.NgayBatDau.ToString("dd/MM/yyyy")
+                        <small>đến @item.NgayKetThuc.ToString("dd/MM/yyyy")</small>
+                    </td>
+                    <td>@item.DiaDiem</td>
+                    <td>@item.NgayDangKy.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <span class="status-badge @item.TrangThaiCss">@item.TenTrangThai</span>
+                    </td>
+                    <td>
+                        @(item.NgayDuyet.HasValue ? item.NgayDuyet.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                    </td>
+                    <td>
+                        @(string.IsNullOrEmpty(item.GhiChu) ? "-" : item.GhiChu)
+                    </td>
+                    <td class="row-actions">
+                        @if (item.CoTheHuy)
+                        {
+                            <details style="position: relative;">
+                                <summary class="danger-button" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; cursor: pointer; list-style: none;">
+                                    Hủy đăng ký
+                                </summary>
+                                <form asp-action="HuyDangKy" method="post" style="margin-top: 0.5rem; background: #fff5f5; padding: 0.75rem; border: 1px solid #f2bdb9; border-radius: 8px; min-width: 260px;">
+                                    <input type="hidden" name="maDangKy" value="@item.MaDangKy" />
+                                    <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">
+                                        Lý do hủy (bắt buộc):
+                                    </label>
+                                    <input type="text" name="lyDoHuy" required maxlength="1000" placeholder="Nhập lý do muốn hủy..." style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 0.5rem;" />
+                                    <div style="display: flex; gap: 0.4rem;">
+                                        <button type="submit" class="danger-button" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="return confirm('Bạn có chắc chắn muốn hủy đăng ký lớp này? Sau khi hủy sẽ không thể đăng ký lại.');">
+                                            Xác nhận hủy
+                                        </button>
+                                    </div>
+                                </form>
+                            </details>
+                        }
+                        else
+                        {
+                            <span class="muted">@(item.LyDoKhongTheHuy ?? "-")</span>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (Model.DanhSach.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="table-empty">Bạn chưa có đơn đăng ký đào tạo nào.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

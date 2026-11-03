@@ -1,1 +1,29 @@
-1
+@*
+//Họ và tên : Phí Bảo Nam - 23103100236
+//Module 3: Quản lý nhân viên – Đăng ký – Duyệt đào tạo.
+*@
+@model NhanVienViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa hồ sơ nhân viên";
+}
+
+<p class="eyebrow navy">QUẢN LÝ NHÂN SỰ / NHÂN VIÊN</p>
+<h1>Chỉnh sửa hồ sơ: @Model.HoTen</h1>
+<p class="muted">Cập nhật thông tin cá nhân, phòng ban và trạng thái hoạt động của nhân viên.</p>
+
+<partial name="_ThongBao" />
+
+<form asp-action="Edit" asp-route-id="@Model.MaNhanVien" method="post" class="editor-panel">
+    <input type="hidden" asp-for="MaNhanVien" />
+    <partial name="_Form" model="Model" />
+
+    <div class="actions">
+        <button type="submit" class="primary-button">Lưu thay đổi</button>
+        <a class="secondary-button" asp-action="Details" asp-route-id="@Model.MaNhanVien">Hủy bỏ</a>
+        <a class="secondary-button" asp-action="Index">Quay lại danh sách</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

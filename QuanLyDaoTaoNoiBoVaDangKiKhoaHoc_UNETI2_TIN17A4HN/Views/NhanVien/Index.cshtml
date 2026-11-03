@@ -1,1 +1,151 @@
-1
+@*
+//Họ và tên : Phí Bảo Nam - 23103100236
+//Module 3: Quản lý nhân viên – Đăng ký – Duyệt đào tạo.
+*@
+@model NhanVienListViewModel
+@{
+    ViewData["Title"] = "Hồ sơ nhân viên";
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow navy">QUẢN LÝ NHÂN SỰ</p>
+        <h1>Danh sách hồ sơ nhân viên</h1>
+        <p class="muted">Quản lý hồ sơ nhân viên, liên kết tài khoản hệ thống và theo dõi đào tạo.</p>
+    </div>
+    <a class="primary-button" asp-action="Create">+ Thêm nhân viên</a>
+</div>
+
+<partial name="_ThongBao" />
+
+<form asp-action="Index" method="get" class="filter-panel">
+    <h2 class="filter-title">Tìm kiếm</h2>
+    <div class="search-row">
+        <div class="field search-field">
+            <label asp-for="SearchTerm">Từ khóa tìm kiếm</label>
+            <input asp-for="SearchTerm" placeholder="Họ tên, email, số điện thoại, phòng ban hoặc tên đăng nhập..." />
+        </div>
+        <div class="actions">
+            <button type="submit" class="primary-button">Tìm kiếm</button>
+        </div>
+    </div>
+
+    <h2 class="filter-title">Bộ lọc và sắp xếp</h2>
+    <div class="filter-grid">
+        <div class="field">
+            <label asp-for="MaPhongBan">Phòng ban</label>
+            <select asp-for="MaPhongBan" asp-items="Model.PhongBans">
+                <option value="">Tất cả phòng ban</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label asp-for="TrangThai">Trạng thái</label>
+            <select asp-for="TrangThai">
+                <option value="">Tất cả trạng thái</option>
+                <option value="hoatdong">Đang làm việc</option>
+                <option value="ngung">Ngừng hoạt động</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label asp-for="SortOrder">Sắp xếp</label>
+            <select asp-for="SortOrder">
+                @foreach (var opt in NhanVienListViewModel.SortOptions)
+                {
+                    <option value="@opt.Key">@opt.Value</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button type="submit" class="primary-button">Lọc dữ liệu</button>
+        <a class="secondary-button" asp-action="Index">Đặt lại bộ lọc</a>
+    </div>
+</form>
+
+<p class="muted">@Model.TotalCount kết quả · @(Model.TotalPages == 0 ? "Chưa có trang" : $"Trang {Model.PageIndex}/{Model.TotalPages}") · @Model.PageSize nhân viên/trang</p>
+
+<div class="table-panel m2-table">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Họ và tên</th>
+                <th>Tài khoản liên kết</th>
+                <th>Phòng ban</th>
+                <th>Liên hệ</th>
+                <th>Ngày vào làm</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.NhanViens)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.MaNhanVien"><strong>@item.HoTen</strong></a>
+                        <small>Sinh ngày: @item.NgaySinh.ToString("dd/MM/yyyy")</small>
+                    </td>
+                    <td>
+                        <strong>@item.TaiKhoan.TenDangNhap</strong>
+                        <small><span class="role-badge">@item.TaiKhoan.VaiTro</span></small>
+                    </td>
+                    <td>@item.PhongBan.TenPhongBan</td>
+                    <td>
+                        <div>@item.Email</div>
+                        @if (!string.IsNullOrEmpty(item.SoDienThoai))
+                        {
+                            <small class="muted">SĐT: @item.SoDienThoai</small>
+                        }
+                    </td>
+                    <td>@item.NgayVaoLam.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <span class="status-badge @(item.TrangThai ? "status-on" : "status-off")">
+                            @(item.TrangThai ? "Đang làm việc" : "Ngừng hoạt động")
+                        </span>
+                    </td>
+                    <td class="row-actions">
+                        <a asp-action="Edit" asp-route-id="@item.MaNhanVien">Sửa</a>
+                        <a asp-action="Details" asp-route-id="@item.MaNhanVien">Chi tiết</a>
+                    </td>
+                </tr>
+            }
+            @if (Model.NhanViens.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" class="table-empty">Không tìm thấy hồ sơ nhân viên nào phù hợp.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="pagination" aria-label="Phân trang danh sách nhân viên">
+        @if (Model.HasPreviousPage)
+        {
+            <a asp-action="Index" asp-all-route-data="Model.RouteForPage(1)">Đầu</a>
+            <a asp-action="Index" asp-all-route-data="Model.RouteForPage(Model.PageIndex - 1)">← Trước</a>
+        }
+        @for (var pageNum = Math.Max(1, Model.PageIndex - 2); pageNum <= Math.Min(Model.TotalPages, Model.PageIndex + 2); pageNum++)
+        {
+            if (pageNum == Model.PageIndex)
+            {
+                <span class="current" aria-current="page">@pageNum</span>
+            }
+            else
+            {
+                <a asp-action="Index" asp-all-route-data="Model.RouteForPage(pageNum)">@pageNum</a>
+            }
+        }
+        @if (Model.HasNextPage)
+        {
+            <a asp-action="Index" asp-all-route-data="Model.RouteForPage(Model.PageIndex + 1)">Sau →</a>
+            <a asp-action="Index" asp-all-route-data="Model.RouteForPage(Model.TotalPages)">Cuối</a>
+        }
+    </nav>
+}
+s

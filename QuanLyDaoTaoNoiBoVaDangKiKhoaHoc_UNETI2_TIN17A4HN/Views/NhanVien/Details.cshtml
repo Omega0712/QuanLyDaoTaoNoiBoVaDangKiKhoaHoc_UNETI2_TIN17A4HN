@@ -1,1 +1,74 @@
-1
+@*
+//Họ và tên : Phí Bảo Nam - 23103100236
+//Module 3: Quản lý nhân viên – Đăng ký – Duyệt đào tạo.
+*@
+@model NhanVienViewModel
+@{
+    ViewData["Title"] = "Chi tiết hồ sơ nhân viên";
+}
+
+<p class="eyebrow navy">QUẢN LÝ NHÂN SỰ / NHÂN VIÊN</p>
+<h1>Hồ sơ: @Model.HoTen</h1>
+
+<partial name="_ThongBao" />
+
+<section class="editor-panel">
+    <dl class="detail-grid">
+        <dt>Họ và tên</dt>
+        <dd><strong>@Model.HoTen</strong></dd>
+
+        <dt>Tài khoản liên kết</dt>
+        <dd>
+            <strong>@Model.TenDangNhap</strong>
+            <span class="role-badge">@Model.VaiTroTaiKhoan</span>
+        </dd>
+
+        <dt>Phòng ban</dt>
+        <dd>@Model.TenPhongBan</dd>
+
+        <dt>Email</dt>
+        <dd><a href="mailto:@Model.Email">@Model.Email</a></dd>
+
+        <dt>Số điện thoại</dt>
+        <dd>@(string.IsNullOrEmpty(Model.SoDienThoai) ? "Chưa cập nhật" : Model.SoDienThoai)</dd>
+
+        <dt>Ngày sinh</dt>
+        <dd>@Model.NgaySinh.ToString("dd/MM/yyyy")</dd>
+
+        <dt>Ngày vào làm</dt>
+        <dd>@Model.NgayVaoLam.ToString("dd/MM/yyyy")</dd>
+
+        <dt>Trạng thái</dt>
+        <dd>
+            <span class="status-badge @Model.TrangThaiCss">@Model.TenTrangThai</span>
+        </dd>
+
+        <dt>Số khóa đã đăng ký</dt>
+        <dd><strong>@Model.SoKhoaDaDangKy</strong> khóa/lớp đào tạo</dd>
+
+        <dt>Số buổi đã điểm danh</dt>
+        <dd><strong>@Model.SoBuoiDaDiemDanh</strong> buổi học</dd>
+    </dl>
+
+    <div class="actions">
+        <a class="primary-button" asp-action="Edit" asp-route-id="@Model.MaNhanVien">Chỉnh sửa hồ sơ</a>
+        <a class="secondary-button" asp-action="Index">Quay lại danh sách</a>
+    </div>
+</section>
+
+<section class="delete-panel">
+    <h2>Xóa / Ngừng hoạt động hồ sơ</h2>
+    <p>
+        Xóa hồ sơ nhân viên không xóa tài khoản đăng nhập.
+        <br />
+        <strong>Lưu ý:</strong> Nếu nhân viên đã có lịch sử đăng ký hoặc điểm danh, hệ thống sẽ tự động chuyển hồ sơ sang trạng thái <strong>Ngừng hoạt động</strong> để bảo toàn lịch sử đào tạo.
+    </p>
+
+    <form asp-action="Delete" asp-route-id="@Model.MaNhanVien" method="post">
+        <label class="confirm-delete">
+            <input type="checkbox" required />
+            <span>Tôi xác nhận muốn xóa hoặc chuyển trạng thái hồ sơ nhân viên này.</span>
+        </label>
+        <button class="danger-button" type="submit">Xác nhận xóa hồ sơ</button>
+    </form>
+</section>

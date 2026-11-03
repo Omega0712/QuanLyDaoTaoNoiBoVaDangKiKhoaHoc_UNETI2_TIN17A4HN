@@ -1,1 +1,216 @@
-1
+@*
+//Họ và tên : Phí Bảo Nam - 23103100236
+//Module 3: Quản lý nhân viên – Đăng ký – Duyệt đào tạo.
+*@
+@model DuyetDangKyListViewModel
+@{
+    ViewData["Title"] = "Xét duyệt đăng ký đào tạo";
+}
+
+<div class="section-heading">
+    <div>
+        <p class="eyebrow navy">QUẢN LÝ ĐÀO TẠO</p>
+        <h1>Xét duyệt đơn đăng ký đào tạo</h1>
+        <p class="muted">Xem xét, phê duyệt hoặc từ chối các yêu cầu tham gia lớp đào tạo từ cán bộ và nhân viên.</p>
+    </div>
+</div>
+
+<partial name="_ThongBao" />
+
+<form asp-action="DuyetDangKy" method="get" class="filter-panel">
+    <h2 class="filter-title">Bộ lọc danh sách đăng ký</h2>
+    <div class="search-row">
+        <div class="field search-field">
+            <label asp-for="SearchTerm">Tìm kiếm</label>
+            <input asp-for="SearchTerm" placeholder="Tên nhân viên, email, tên lớp, tên khóa..." />
+        </div>
+        <div class="actions">
+            <button type="submit" class="primary-button">Tìm kiếm</button>
+        </div>
+    </div>
+
+    <div class="filter-grid">
+        <div class="field">
+            <label asp-for="MaLop">Lớp đào tạo</label>
+            <select asp-for="MaLop" asp-items="Model.Lops">
+                <option value="">Tất cả các lớp</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label asp-for="MaPhongBan">Phòng ban nhân viên</label>
+            <select asp-for="MaPhongBan" asp-items="Model.PhongBans">
+                <option value="">Tất cả phòng ban</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label asp-for="TrangThai">Trạng thái xét duyệt</label>
+            <select asp-for="TrangThai">
+                <option value="ChoDuyet">Chờ duyệt (Mặc định)</option>
+                <option value="DaDuyet">Đã duyệt</option>
+                <option value="TuChoi">Đã từ chối</option>
+                <option value="DaHuy">Đã hủy</option>
+                <option value="TatCa">-- Tất cả các trạng thái --</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label asp-for="SortOrder">Sắp xếp</label>
+            <select asp-for="SortOrder">
+                @foreach (var opt in DuyetDangKyListViewModel.SortOptions)
+                {
+                    <option value="@opt.Key">@opt.Value</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button type="submit" class="primary-button">Lọc đơn đăng ký</button>
+        <a class="secondary-button" asp-action="DuyetDangKy">Đặt lại bộ lọc</a>
+    </div>
+</form>
+
+<p class="muted">@Model.TotalCount đơn đăng ký · @(Model.TotalPages == 0 ? "Chưa có trang" : $"Trang {Model.PageIndex}/{Model.TotalPages}") · @Model.PageSize đơn/trang</p>
+
+<div class="table-panel m2-table">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Học viên</th>
+                <th>Phòng ban</th>
+                <th>Lớp đào tạo</th>
+                <th>Chỗ còn / Tối đa</th>
+                <th>Ngày đăng ký</th>
+                <th>Trạng thái</th>
+                <th>Ghi chú / Phê duyệt</th>
+                <th>Thao tác xử lý</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.DanhSach)
+            {
+                <tr>
+                    <td>
+                        <strong>@item.HoTenNhanVien</strong>
+                        <small>@item.EmailNhanVien</small>
+                    </td>
+                    <td>@item.TenPhongBan</td>
+                    <td>
+                        <strong>@item.TenLop</strong>
+                        <small>@item.TenKhoaDaoTao · Lịch: @item.NgayBatDau.ToString("dd/MM") - @item.NgayKetThuc.ToString("dd/MM/yyyy")</small>
+                    </td>
+                    <td>
+                        <strong class="@(item.SoChoCon > 0 ? "seats-available" : "seats-full")">
+                            @item.SoChoCon / @item.SoLuongToiDa
+                        </strong>
+                        <small>@item.SoDaDuyet đã duyệt</small>
+                    </td>
+                    <td>@item.NgayDangKy.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <span class="status-badge @item.TrangThaiCss">@item.TenTrangThai</span>
+                    </td>
+                    <td>
+                        @if (item.NgayDuyet.HasValue)
+                        {
+                            <small class="muted">Duyệt lúc: @item.NgayDuyet.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                        }
+                        @if (!string.IsNullOrEmpty(item.GhiChu))
+                        {
+                            <div>@item.GhiChu</div>
+                        }
+                        @if (!item.NgayDuyet.HasValue && string.IsNullOrEmpty(item.GhiChu))
+                        {
+                            <span class="muted">-</span>
+                        }
+                    </td>
+                    <td class="row-actions">
+                        @if (item.CoTheDuyet)
+                        {
+                            <div style="display: flex; gap: 0.4rem; align-items: flex-start; flex-wrap: wrap;">
+                                <form asp-action="Duyet" method="post" style="display: inline;" onsubmit="return confirm('Xác nhận DUYỆT cho học viên @item.HoTenNhanVien tham gia lớp @item.TenLop?');">
+                                    <input type="hidden" name="maDangKy" value="@item.MaDangKy" />
+                                    <button type="submit" class="primary-button" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: var(--ok); border-color: var(--ok);">
+                                        ✓ Duyệt
+                                    </button>
+                                </form>
+
+                                <details style="position: relative;">
+                                    <summary class="danger-button" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer; list-style: none;">
+                                        ✕ Từ chối
+                                    </summary>
+                                    <form asp-action="TuChoi" method="post" style="margin-top: 0.4rem; background: #fff5f5; padding: 0.6rem; border: 1px solid #f2bdb9; border-radius: 8px; min-width: 240px;">
+                                        <input type="hidden" name="maDangKy" value="@item.MaDangKy" />
+                                        <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 0.2rem;">
+                                            Lý do từ chối (bắt buộc):
+                                        </label>
+                                        <input type="text" name="lyDoTuChoi" required maxlength="1000" placeholder="Nhập lý do từ chối..." style="width: 100%; padding: 0.3rem; font-size: 0.8rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 0.4rem;" />
+                                        <button type="submit" class="danger-button" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="return confirm('Xác nhận TỪ CHỐI đơn đăng ký này?');">
+                                            Xác nhận từ chối
+                                        </button>
+                                    </form>
+                                </details>
+                            </div>
+                        }
+                        else if (item.TrangThai == "DaDuyet")
+                        {
+                            <details style="position: relative;">
+                                <summary class="danger-button" style="padding: 0.25rem 0.55rem; font-size: 0.78rem; cursor: pointer; list-style: none;">
+                                    Hủy duyệt
+                                </summary>
+                                <form asp-action="AdminHuy" method="post" style="margin-top: 0.4rem; background: #fff5f5; padding: 0.6rem; border: 1px solid #f2bdb9; border-radius: 8px; min-width: 240px;">
+                                    <input type="hidden" name="maDangKy" value="@item.MaDangKy" />
+                                    <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 0.2rem;">
+                                        Lý do hủy (bắt buộc theo mục 7.6):
+                                    </label>
+                                    <input type="text" name="lyDoHuy" required maxlength="1000" placeholder="Nhập lý do hủy theo nghiệp vụ..." style="width: 100%; padding: 0.3rem; font-size: 0.8rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 0.4rem;" />
+                                    <button type="submit" class="danger-button" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="return confirm('Xác nhận HỦY đơn đăng ký đã duyệt này?');">
+                                        Xác nhận hủy
+                                    </button>
+                                </form>
+                            </details>
+                        }
+                        else
+                        {
+                            <span class="muted">Đã kết thúc</span>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (Model.DanhSach.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="table-empty">Không có đơn đăng ký nào theo điều kiện lọc hiện tại.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="pagination" aria-label="Phân trang danh sách duyệt">
+        @if (Model.HasPreviousPage)
+        {
+            <a asp-action="DuyetDangKy" asp-all-route-data="Model.RouteForPage(1)">Đầu</a>
+            <a asp-action="DuyetDangKy" asp-all-route-data="Model.RouteForPage(Model.PageIndex - 1)">← Trước</a>
+        }
+        @for (var pageNum = Math.Max(1, Model.PageIndex - 2); pageNum <= Math.Min(Model.TotalPages, Model.PageIndex + 2); pageNum++)
+        {
+            if (pageNum == Model.PageIndex)
+            {
+                <span class="current" aria-current="page">@pageNum</span>
+            }
+            else
+            {
+                <a asp-action="DuyetDangKy" asp-all-route-data="Model.RouteForPage(pageNum)">@pageNum</a>
+            }
+        }
+        @if (Model.HasNextPage)
+        {
+            <a asp-action="DuyetDangKy" asp-all-route-data="Model.RouteForPage(Model.PageIndex + 1)">Sau →</a>
+            <a asp-action="DuyetDangKy" asp-all-route-data="Model.RouteForPage(Model.TotalPages)">Cuối</a>
+        }
+    </nav>
+}
